@@ -1,12 +1,12 @@
 This is a port of BSD make (taken directly from FreeBSD 3.4-STABLE).
 
-*.diff files contain all the changes I made.
 I had to add err.c/err.h from FreeBSD libc and wrote simple Makefile
 that should be suitable for gmake and Solaris make (you should uncomment two
 lines for Solaris make in Makefile).
 
 To install just copy Makefile.dist to Makefile, uncomment options for
-your system and run make.
+your system and run make. If you have GNU make and BSD install (all Linux
+distros have them) you can use GNUmakefile (just type 'make' or 'gmake').
 
 Tested successfully on Solaris 2.6, Slackware 7.0 and Redhat 6.0.
 Makefile.pmake is Makefile for building pmake with pmake
