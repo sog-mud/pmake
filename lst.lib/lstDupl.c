@@ -33,11 +33,12 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $FreeBSD: src/usr.bin/make/lst.lib/lstDupl.c,v 1.6.2.1 1999/08/29 15:30:42 peter Exp $
+ * @(#)lstDupl.c	8.1 (Berkeley) 6/6/93
  */
 
 #ifndef lint
-static char sccsid[] = "@(#)lstDupl.c	8.1 (Berkeley) 6/6/93";
+#include <sys/cdefs.h>
+__FBSDID("$FreeBSD: src/usr.bin/make/lst.lib/lstDupl.c,v 1.12 2002/10/09 02:00:22 jmallett Exp $");
 #endif /* not lint */
 
 /*-
@@ -51,11 +52,11 @@ static char sccsid[] = "@(#)lstDupl.c	8.1 (Berkeley) 6/6/93";
 /*-
  *-----------------------------------------------------------------------
  * Lst_Duplicate --
- *	Duplicate an entire list. If a function to copy a ClientData is
+ *	Duplicate an entire list. If a function to copy a void * is
  *	given, the individual client elements will be duplicated as well.
  *
  * Results:
- *	The new Lst structure or NILLST if failure.
+ *	The new Lst structure or NULL if failure.
  *
  * Side Effects:
  *	A new list is created.
@@ -64,34 +65,34 @@ static char sccsid[] = "@(#)lstDupl.c	8.1 (Berkeley) 6/6/93";
 Lst
 Lst_Duplicate (l, copyProc)
     Lst     	  l;	    	 /* the list to duplicate */
-    /* A function to duplicate each ClientData */
-    ClientData	  (*copyProc) __P((ClientData));
+    /* A function to duplicate each void * */
+    void *	  (*copyProc)(void *);
 {
     register Lst 	nl;
     register ListNode  	ln;
     register List 	list = (List)l;
 
     if (!LstValid (l)) {
-	return (NILLST);
+	return (NULL);
     }
 
     nl = Lst_Init (list->isCirc);
-    if (nl == NILLST) {
-	return (NILLST);
+    if (nl == NULL) {
+	return (NULL);
     }
 
     ln = list->firstPtr;
-    while (ln != NilListNode) {
+    while (ln != NULL) {
 	if (copyProc != NOCOPY) {
 	    if (Lst_AtEnd (nl, (*copyProc) (ln->datum)) == FAILURE) {
-		return (NILLST);
+		return (NULL);
 	    }
 	} else if (Lst_AtEnd (nl, ln->datum) == FAILURE) {
-	    return (NILLST);
+	    return (NULL);
 	}
 
 	if (list->isCirc && ln == list->lastPtr) {
-	    ln = NilListNode;
+	    ln = NULL;
 	} else {
 	    ln = ln->nextPtr;
 	}

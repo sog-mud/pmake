@@ -33,11 +33,12 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $FreeBSD: src/usr.bin/make/lst.lib/lstFirst.c,v 1.4.2.1 1999/08/29 15:30:44 peter Exp $
+ * @(#)lstFirst.c	8.1 (Berkeley) 6/6/93
  */
 
 #ifndef lint
-static char sccsid[] = "@(#)lstFirst.c	8.1 (Berkeley) 6/6/93";
+#include <sys/cdefs.h>
+__FBSDID("$FreeBSD: src/usr.bin/make/lst.lib/lstFirst.c,v 1.8 2002/10/09 02:00:22 jmallett Exp $");
 #endif /* not lint */
 
 /*-
@@ -53,7 +54,7 @@ static char sccsid[] = "@(#)lstFirst.c	8.1 (Berkeley) 6/6/93";
  *	Return the first node on the given list.
  *
  * Results:
- *	The first node or NILLNODE if the list is empty.
+ *	The first node or NULL if the list is empty.
  *
  * Side Effects:
  *	None.
@@ -65,7 +66,7 @@ Lst_First (l)
     Lst	l;
 {
     if (!LstValid (l) || LstIsEmpty (l)) {
-	return (NILLNODE);
+	return (NULL);
     } else {
 	return ((LstNode)((List)l)->firstPtr);
     }

@@ -33,11 +33,12 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $FreeBSD: src/usr.bin/make/lst.lib/lstForEachFrom.c,v 1.6.2.1 1999/08/29 15:30:45 peter Exp $
+ * @(#)lstForEachFrom.c	8.1 (Berkeley) 6/6/93
  */
 
 #ifndef lint
-static char sccsid[] = "@(#)lstForEachFrom.c	8.1 (Berkeley) 6/6/93";
+#include <sys/cdefs.h>
+__FBSDID("$FreeBSD: src/usr.bin/make/lst.lib/lstForEachFrom.c,v 1.12 2002/10/09 02:00:22 jmallett Exp $");
 #endif /* not lint */
 
 /*-
@@ -68,8 +69,8 @@ void
 Lst_ForEachFrom (l, ln, proc, d)
     Lst	    	    	l;
     LstNode    	  	ln;
-    register int	(*proc) __P((ClientData, ClientData));
-    register ClientData	d;
+    register int	(*proc)(void *, void *);
+    register void *	d;
 {
     register ListNode	tln = (ListNode)ln;
     register List 	list = (List)l;
@@ -100,7 +101,7 @@ Lst_ForEachFrom (l, ln, proc, d)
 	 *    doesn't exist.
 	 */
 	done = (next == tln->nextPtr &&
-		(next == NilListNode || next == list->firstPtr));
+		(next == NULL || next == list->firstPtr));
 
 	next = tln->nextPtr;
 

@@ -33,11 +33,12 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $FreeBSD: src/usr.bin/make/lst.lib/lstFind.c,v 1.5.2.1 1999/08/29 15:30:43 peter Exp $
+ * @(#)lstFind.c	8.1 (Berkeley) 6/6/93
  */
 
 #ifndef lint
-static char sccsid[] = "@(#)lstFind.c	8.1 (Berkeley) 6/6/93";
+#include <sys/cdefs.h>
+__FBSDID("$FreeBSD: src/usr.bin/make/lst.lib/lstFind.c,v 1.11 2002/10/09 02:00:22 jmallett Exp $");
 #endif /* not lint */
 
 /*-
@@ -54,7 +55,7 @@ static char sccsid[] = "@(#)lstFind.c	8.1 (Berkeley) 6/6/93";
  *	and the given datum.
  *
  * Results:
- *	The found node or NILLNODE if none matches.
+ *	The found node or NULL if none matches.
  *
  * Side Effects:
  *	None.
@@ -64,8 +65,8 @@ static char sccsid[] = "@(#)lstFind.c	8.1 (Berkeley) 6/6/93";
 LstNode
 Lst_Find (l, d, cProc)
     Lst		l;
-    ClientData	d;
-    int		(*cProc) __P((ClientData, ClientData));
+    void *	d;
+    int		(*cProc)(void *, void *);
 {
     return (Lst_FindFrom (l, Lst_First(l), d, cProc));
 }

@@ -30,12 +30,22 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	from: @(#)pathnames.h	5.2 (Berkeley) 6/1/90
- * $FreeBSD: src/usr.bin/make/pathnames.h,v 1.7.2.1 1999/08/29 15:30:29 peter Exp $
+ *	@(#)pathnames.h	8.2 (Berkeley) 4/28/95
+ * $FreeBSD: src/usr.bin/make/pathnames.h,v 1.12 2002/05/24 15:51:27 ru Exp $
  */
 
+#ifndef _PATH_OBJDIR
 #define	_PATH_OBJDIR		"obj"
+#endif /* ! _PATH_OBJDIR */
+#ifndef _PATH_OBJDIRPREFIX
 #define	_PATH_OBJDIRPREFIX	"/usr/obj"
+#endif /* ! _PATH_OBJDIRPREFIX */
+#ifndef _PATH_DEFSHELLDIR
 #define	_PATH_DEFSHELLDIR	"/bin"
+#endif /* ! _PATH_DEFSHELLDIR */
+#ifndef _PATH_DEFSYSMK
 #define	_PATH_DEFSYSMK		"sys.mk"
-#define _PATH_DEFSYSPATH	"/usr/local/share/mk"
+#endif /* ! _PATH_DEFSYSMK */
+#ifndef _PATH_DEFSYSPATH
+#define	_PATH_DEFSYSPATH	"/usr/local/share/mk"
+#endif /* ! _PATH_DEFSYSPATH */

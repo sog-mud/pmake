@@ -33,11 +33,12 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $FreeBSD: src/usr.bin/make/lst.lib/lstOpen.c,v 1.4.2.1 1999/08/29 15:30:48 peter Exp $
+ * @(#)lstOpen.c	8.1 (Berkeley) 6/6/93
  */
 
 #ifndef lint
-static char sccsid[] = "@(#)lstOpen.c	8.1 (Berkeley) 6/6/93";
+#include <sys/cdefs.h>
+__FBSDID("$FreeBSD: src/usr.bin/make/lst.lib/lstOpen.c,v 1.8 2002/10/09 02:00:22 jmallett Exp $");
 #endif /* not lint */
 
 /*-
@@ -61,7 +62,7 @@ static char sccsid[] = "@(#)lstOpen.c	8.1 (Berkeley) 6/6/93";
  *	SUCCESS or FAILURE.
  *
  * Side Effects:
- *	isOpen is set TRUE and curPtr is set to NilListNode so the
+ *	isOpen is set TRUE and curPtr is set to NULL so the
  *	other sequential functions no it was just opened and can choose
  *	the first element accessed based on this.
  *
@@ -76,7 +77,7 @@ Lst_Open (l)
 	}
 	((List) l)->isOpen = TRUE;
 	((List) l)->atEnd = LstIsEmpty (l) ? Head : Unknown;
-	((List) l)->curPtr = NilListNode;
+	((List) l)->curPtr = NULL;
 
 	return (SUCCESS);
 }

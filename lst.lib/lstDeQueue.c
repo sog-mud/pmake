@@ -33,11 +33,12 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $FreeBSD: src/usr.bin/make/lst.lib/lstDeQueue.c,v 1.5.2.1 1999/08/29 15:30:40 peter Exp $
+ * @(#)lstDeQueue.c	8.1 (Berkeley) 6/6/93
  */
 
 #ifndef lint
-static char sccsid[] = "@(#)lstDeQueue.c	8.1 (Berkeley) 6/6/93";
+#include <sys/cdefs.h>
+__FBSDID("$FreeBSD: src/usr.bin/make/lst.lib/lstDeQueue.c,v 1.10 2002/10/09 02:00:22 jmallett Exp $");
 #endif /* not lint */
 
 /*-
@@ -53,7 +54,7 @@ static char sccsid[] = "@(#)lstDeQueue.c	8.1 (Berkeley) 6/6/93";
  *	Remove and return the datum at the head of the given list.
  *
  * Results:
- *	The datum in the node at the head or (ick) NIL if the list
+ *	The datum in the node at the head or (ick) NULL if the list
  *	is empty.
  *
  * Side Effects:
@@ -61,21 +62,21 @@ static char sccsid[] = "@(#)lstDeQueue.c	8.1 (Berkeley) 6/6/93";
  *
  *-----------------------------------------------------------------------
  */
-ClientData
+void *
 Lst_DeQueue (l)
     Lst	    	  l;
 {
-    ClientData	  rd;
+    void *	  rd;
     register ListNode	tln;
 
     tln = (ListNode) Lst_First (l);
-    if (tln == NilListNode) {
-	return ((ClientData) NIL);
+    if (tln == NULL) {
+	return ((void *) NULL);
     }
 
     rd = tln->datum;
     if (Lst_Remove (l, (LstNode)tln) == FAILURE) {
-	return ((ClientData) NIL);
+	return ((void *) NULL);
     } else {
 	return (rd);
     }

@@ -33,11 +33,12 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $FreeBSD: src/usr.bin/make/lst.lib/lstNext.c,v 1.5.2.1 1999/08/29 15:30:48 peter Exp $
+ * @(#)lstNext.c	8.1 (Berkeley) 6/6/93
  */
 
 #ifndef lint
-static char sccsid[] = "@(#)lstNext.c	8.1 (Berkeley) 6/6/93";
+#include <sys/cdefs.h>
+__FBSDID("$FreeBSD: src/usr.bin/make/lst.lib/lstNext.c,v 1.9 2002/10/09 02:00:22 jmallett Exp $");
 #endif /* not lint */
 
 /*-
@@ -58,8 +59,8 @@ static char sccsid[] = "@(#)lstNext.c	8.1 (Berkeley) 6/6/93";
  *	Return the next node for the given list.
  *
  * Results:
- *	The next node or NILLNODE if the list has yet to be opened. Also
- *	if the list is non-circular and the end has been reached, NILLNODE
+ *	The next node or NULL if the list has yet to be opened. Also
+ *	if the list is non-circular and the end has been reached, NULL
  *	is returned.
  *
  * Side Effects:
@@ -76,12 +77,12 @@ Lst_Next (l)
 
     if ((LstValid (l) == FALSE) ||
 	(list->isOpen == FALSE)) {
-	    return (NILLNODE);
+	    return (NULL);
     }
 
     list->prevPtr = list->curPtr;
 
-    if (list->curPtr == NilListNode) {
+    if (list->curPtr == NULL) {
 	if (list->atEnd == Unknown) {
 	    /*
 	     * If we're just starting out, atEnd will be Unknown.
@@ -91,14 +92,14 @@ Lst_Next (l)
 	    list->curPtr = tln = list->firstPtr;
 	    list->atEnd = Middle;
 	} else {
-	    tln = NilListNode;
+	    tln = NULL;
 	    list->atEnd = Tail;
 	}
     } else {
 	tln = list->curPtr->nextPtr;
 	list->curPtr = tln;
 
-	if (tln == list->firstPtr || tln == NilListNode) {
+	if (tln == list->firstPtr || tln == NULL) {
 	    /*
 	     * If back at the front, then we've hit the end...
 	     */

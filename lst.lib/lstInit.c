@@ -33,11 +33,12 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $FreeBSD: src/usr.bin/make/lst.lib/lstInit.c,v 1.5.2.1 1999/08/29 15:30:45 peter Exp $
+ * @(#)lstInit.c	8.1 (Berkeley) 6/6/93
  */
 
 #ifndef lint
-static char sccsid[] = "@(#)lstInit.c	8.1 (Berkeley) 6/6/93";
+#include <sys/cdefs.h>
+__FBSDID("$FreeBSD: src/usr.bin/make/lst.lib/lstInit.c,v 1.9 2002/10/09 02:00:22 jmallett Exp $");
 #endif /* not lint */
 
 /*-
@@ -68,8 +69,8 @@ Lst_Init(circ)
 
     PAlloc (nList, List);
 
-    nList->firstPtr = NilListNode;
-    nList->lastPtr = NilListNode;
+    nList->firstPtr = NULL;
+    nList->lastPtr = NULL;
     nList->isOpen = FALSE;
     nList->isCirc = circ;
     nList->atEnd = Unknown;

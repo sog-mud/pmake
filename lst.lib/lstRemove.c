@@ -33,11 +33,12 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $FreeBSD: src/usr.bin/make/lst.lib/lstRemove.c,v 1.5.2.1 1999/08/29 15:30:49 peter Exp $
+ * @(#)lstRemove.c	8.1 (Berkeley) 6/6/93
  */
 
 #ifndef lint
-static char sccsid[] = "@(#)lstRemove.c	8.1 (Berkeley) 6/6/93";
+#include <sys/cdefs.h>
+__FBSDID("$FreeBSD: src/usr.bin/make/lst.lib/lstRemove.c,v 1.10 2002/10/09 02:00:22 jmallett Exp $");
 #endif /* not lint */
 
 /*-
@@ -56,7 +57,7 @@ static char sccsid[] = "@(#)lstRemove.c	8.1 (Berkeley) 6/6/93";
  *	SUCCESS or FAILURE.
  *
  * Side Effects:
- *	The list's firstPtr will be set to NilListNode if ln is the last
+ *	The list's firstPtr will be set to NULL if ln is the last
  *	node on the list. firsPtr and lastPtr will be altered if ln is
  *	either the first or last node, respectively, on the list.
  *
@@ -78,10 +79,10 @@ Lst_Remove (l, ln)
     /*
      * unlink it from the list
      */
-    if (lNode->nextPtr != NilListNode) {
+    if (lNode->nextPtr != NULL) {
 	lNode->nextPtr->prevPtr = lNode->prevPtr;
     }
-    if (lNode->prevPtr != NilListNode) {
+    if (lNode->prevPtr != NULL) {
 	lNode->prevPtr->nextPtr = lNode->nextPtr;
     }
 
@@ -99,12 +100,12 @@ Lst_Remove (l, ln)
     /*
      * Sequential access stuff. If the node we're removing is the current
      * node in the list, reset the current node to the previous one. If the
-     * previous one was non-existent (prevPtr == NilListNode), we set the
+     * previous one was non-existent (prevPtr == NULL), we set the
      * end to be Unknown, since it is.
      */
     if (list->isOpen && (list->curPtr == lNode)) {
 	list->curPtr = list->prevPtr;
-	if (list->curPtr == NilListNode) {
+	if (list->curPtr == NULL) {
 	    list->atEnd = Unknown;
 	}
     }
@@ -115,7 +116,7 @@ Lst_Remove (l, ln)
      * this case). The list is, therefore, empty and is marked as such
      */
     if (list->firstPtr == lNode) {
-	list->firstPtr = NilListNode;
+	list->firstPtr = NULL;
     }
 
     /*
@@ -123,7 +124,7 @@ Lst_Remove (l, ln)
      * necessary and as expected.
      */
     if (lNode->useCount == 0) {
-	free ((Address)ln);
+	free (ln);
     } else {
 	lNode->flags |= LN_DELETED;
     }

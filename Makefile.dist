@@ -1,7 +1,7 @@
 #
 # Makefile for gmake
 CC=	gcc
-CFLAGS=	-I. -O2
+CFLAGS=	-I. -O2 "-D__FBSDID(x)=" -DDEFSHELL=1
 LD=	gcc
 MKDIR=	mkdir
 GZIP=	gzip
@@ -24,7 +24,7 @@ PREFIX=	/usr/local
 MANDIR=	$(PREFIX)/man
 
 OBJS=	arch.o buf.o compat.o cond.o dir.o err.o for.o hash.o job.o \
-	main.o make.o parse.o str.o suff.o targ.o util.o var.o \
+	main.o make.o parse.o str.o suff.o targ.o util.o var.o var_modify.o \
 	lst.lib/lstAppend.o lst.lib/lstAtEnd.o lst.lib/lstAtFront.o \
 	lst.lib/lstClose.o lst.lib/lstConcat.o lst.lib/lstDatum.o \
 	lst.lib/lstDeQueue.o lst.lib/lstDestroy.o lst.lib/lstDupl.o \
@@ -34,6 +34,8 @@ OBJS=	arch.o buf.o compat.o cond.o dir.o err.o for.o hash.o job.o \
 	lst.lib/lstIsEmpty.o lst.lib/lstLast.o lst.lib/lstMember.o \
 	lst.lib/lstNext.o lst.lib/lstOpen.o lst.lib/lstRemove.o \
 	lst.lib/lstReplace.o lst.lib/lstSucc.o
+
+all:	$(TARGET) $(TARGET).1.gz
 
 $(TARGET): $(OBJS)
 	$(LD) -o $(TARGET) $(OBJS)

@@ -33,11 +33,12 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $FreeBSD: src/usr.bin/make/lst.lib/lstAtFront.c,v 1.5.2.1 1999/08/29 15:30:39 peter Exp $
+ * @(#)lstAtFront.c	8.1 (Berkeley) 6/6/93
  */
 
 #ifndef lint
-static char sccsid[] = "@(#)lstAtFront.c	8.1 (Berkeley) 6/6/93";
+#include <sys/cdefs.h>
+__FBSDID("$FreeBSD: src/usr.bin/make/lst.lib/lstAtFront.c,v 1.9 2002/10/09 02:00:22 jmallett Exp $");
 #endif /* not lint */
 
 /*-
@@ -64,7 +65,7 @@ static char sccsid[] = "@(#)lstAtFront.c	8.1 (Berkeley) 6/6/93";
 ReturnStatus
 Lst_AtFront (l, d)
     Lst		l;
-    ClientData	d;
+    void *	d;
 {
     register LstNode	front;
 
