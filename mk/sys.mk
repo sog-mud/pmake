@@ -1,5 +1,5 @@
 #	from: @(#)sys.mk	8.2 (Berkeley) 3/21/94
-# $FreeBSD: src/share/mk/sys.mk,v 1.45.2.2 2001/03/04 09:40:33 kris Exp $
+# $FreeBSD: src/share/mk/sys.mk,v 1.45.2.5 2002/07/17 19:08:23 ru Exp $
 
 unix		?=	We run FreeBSD, not UNIX.
 
@@ -168,15 +168,18 @@ HTAGSFLAGS=
 
 # non-Posix rule set
 
-.c:
-	${CC} ${CFLAGS} ${LDFLAGS} ${.IMPSRC} ${LDLIBS} -o ${.TARGET}
-
 .sh:
 	cp -p ${.IMPSRC} ${.TARGET}
 	chmod a+x ${.TARGET}
 
+.c:
+	${CC} ${CFLAGS} ${LDFLAGS} ${.IMPSRC} ${LDLIBS} -o ${.TARGET}
+
 .c.o:
 	${CC} ${CFLAGS} -c ${.IMPSRC}
+
+.cc .cpp .cxx .C:
+	${CXX} ${CXXFLAGS} ${LDFLAGS} ${.IMPSRC} ${LDLIBS} -o ${.TARGET}
 
 .cc.o .cpp.o .cxx.o .C.o:
 	${CXX} ${CXXFLAGS} -c ${.IMPSRC}
@@ -186,6 +189,10 @@ HTAGSFLAGS=
 
 .p.o:
 	${PC} ${PFLAGS} -c ${.IMPSRC}
+
+.e .r .F .f:
+	${FC} ${RFLAGS} ${EFLAGS} ${FFLAGS} ${LDFLAGS} ${.IMPSRC} ${LDLIBS} \
+	    -o ${.TARGET}
 
 .e.o .r.o .F.o .f.o:
 	${FC} ${RFLAGS} ${EFLAGS} ${FFLAGS} -c ${.IMPSRC}
@@ -240,8 +247,9 @@ HTAGSFLAGS=
 .include </etc/defaults/make.conf>
 .endif
 
-.if exists(/etc/make.conf)
-.include </etc/make.conf>
+__MAKE_CONF?=/etc/make.conf
+.if exists(${__MAKE_CONF})
+.include "${__MAKE_CONF}"
 .endif
 
 .include <bsd.cpu.mk>
@@ -251,5 +259,14 @@ HTAGSFLAGS=
 .include </etc/make.conf.local>
 .endif
 
+#
+# The build tools are indirected by /usr/bin/objformat which determines the
+# object format from the OBJFORMAT environment variable and if this is not
+# defined, it reads /etc/objformat.
+#
+.if exists(/etc/objformat) && !defined(OBJFORMAT)
+.include "/etc/objformat"
+.endif
 
-.include <bsd.own.mk>
+# Default executable format
+OBJFORMAT?=	elf

@@ -1,20 +1,11 @@
 #	from: @(#)bsd.prog.mk	5.26 (Berkeley) 6/25/91
-# $FreeBSD: src/share/mk/bsd.prog.mk,v 1.86.2.3 2001/04/25 14:05:26 ru Exp $
+# $FreeBSD: src/share/mk/bsd.prog.mk,v 1.86.2.15 2002/07/22 14:21:51 ru Exp $
 
-.if !target(__initialized__)
-__initialized__:
-.if exists(${.CURDIR}/../Makefile.inc)
-.include "${.CURDIR}/../Makefile.inc"
-.endif
-.endif
+.include <bsd.init.mk>
 
 .SUFFIXES: .out .o .c .cc .cpp .cxx .C .m .y .l .s .S
 
 CFLAGS+=${COPTS} ${DEBUG_FLAGS}
-.if defined(DESTDIR)
-CFLAGS+= -I${DESTDIR}/usr/include
-CXXINCLUDES+= -I${DESTDIR}/usr/include/g++
-.endif
 
 .if !defined(DEBUG_FLAGS)
 STRIP?=	-s
@@ -22,6 +13,10 @@ STRIP?=	-s
 
 .if defined(NOSHARED) && ( ${NOSHARED} != "no" && ${NOSHARED} != "NO" )
 LDFLAGS+= -static
+.endif
+
+.if defined(PROG_CXX)
+PROG=	${PROG_CXX}
 .endif
 
 .if defined(PROG)
@@ -36,12 +31,20 @@ LDADD+=	${OBJCLIBS}
 OBJS+=  ${SRCS:N*.h:R:S/$/.o/g}
 
 ${PROG}: ${OBJS}
-	${CC} ${CFLAGS} ${LDFLAGS} -o ${.TARGET} ${OBJS} ${LDDESTDIR} ${LDADD}
+.if defined(PROG_CXX)
+	${CXX} ${CXXFLAGS} ${LDFLAGS} -o ${.TARGET} ${OBJS} ${LDADD}
+.else
+	${CC} ${CFLAGS} ${LDFLAGS} -o ${.TARGET} ${OBJS} ${LDADD}
+.endif
 
 .else !defined(SRCS)
 
 .if !target(${PROG})
+.if defined(PROG_CXX)
+SRCS=	${PROG}.cc
+.else
 SRCS=	${PROG}.c
+.endif
 
 # Always make an intermediate object file because:
 # - it saves time rebuilding when only the library has changed
@@ -51,7 +54,11 @@ SRCS=	${PROG}.c
 OBJS=	${PROG}.o
 
 ${PROG}: ${OBJS}
-	${CC} ${CFLAGS} ${LDFLAGS} -o ${.TARGET} ${OBJS} ${LDDESTDIR} ${LDADD}
+.if defined(PROG_CXX)
+	${CXX} ${CXXFLAGS} ${LDFLAGS} -o ${.TARGET} ${OBJS} ${LDADD}
+.else
+	${CC} ${CFLAGS} ${LDFLAGS} -o ${.TARGET} ${OBJS} ${LDADD}
+.endif
 .endif
 
 .endif
@@ -66,11 +73,9 @@ MAN1=	${MAN}
 .endif
 .endif
 
-.MAIN: all
+all: objwarn ${PROG} ${SCRIPTS}
 .if !defined(NOMAN)
-all: objwarn ${PROG} ${SCRIPTS} all-man _SUBDIR
-.else
-all: objwarn ${PROG} ${SCRIPTS} _SUBDIR
+all: _manpages
 .endif
 
 CLEANFILES+= ${PROG} ${OBJS}
@@ -78,24 +83,27 @@ CLEANFILES+= ${PROG} ${OBJS}
 .if defined(PROG)
 _EXTRADEPEND:
 .if ${OBJFORMAT} == aout
-	echo ${PROG}: `${CC} -Wl,-f ${CFLAGS} ${LDFLAGS} ${LDDESTDIR} \
+	echo ${PROG}: `${CC} -Wl,-f ${CFLAGS} ${LDFLAGS} \
 	    ${LDADD:S/^/-Wl,/}` >> ${DEPENDFILE}
 .else
 	echo ${PROG}: ${LIBC} ${DPADD} >> ${DEPENDFILE}
+.if defined(PROG_CXX)
+	echo ${PROG}: ${LIBSTDCPLUSPLUS} >> ${DEPENDFILE}
+.endif
 .endif
 .endif
 
 .if !target(install)
-.if !target(beforeinstall)
-beforeinstall:
-.endif
 
 _INSTALLFLAGS:=	${INSTALLFLAGS}
 .for ie in ${INSTALLFLAGS_EDIT}
 _INSTALLFLAGS:=	${_INSTALLFLAGS${ie}}
 .endfor
 
-realinstall: beforeinstall
+.if !target(realinstall)
+realinstall: _proginstall
+.ORDER: beforeinstall _proginstall
+_proginstall:
 .if defined(PROG)
 .if defined(PROGNAME)
 	${INSTALL} ${COPY} ${STRIP} -o ${BINOWN} -g ${BINGRP} -m ${BINMODE} \
@@ -106,34 +114,14 @@ realinstall: beforeinstall
 .endif
 .endif
 .if defined(HIDEGAME)
-	(cd ${DESTDIR}/${GBINDIR}; rm -f ${PROG}; ln -s dm ${PROG}; \
-	    chown games:bin ${PROG})
+	(cd ${DESTDIR}${ORIGBINDIR}; ln -fs dm ${PROG}; \
+	    chown -h ${BINOWN}:${ORIGBINGRP} ${PROG})
 .endif
-.if defined(LINKS) && !empty(LINKS)
-	@set ${LINKS}; \
-	while test $$# -ge 2; do \
-		l=${DESTDIR}$$1; \
-		shift; \
-		t=${DESTDIR}$$1; \
-		shift; \
-		${ECHO} $$t -\> $$l; \
-		ln -f $$l $$t; \
-	done; true
-.endif
-.if defined(SYMLINKS) && !empty(SYMLINKS)
-	@set ${SYMLINKS}; \
-	while test $$# -ge 2; do \
-		l=$$1; \
-		shift; \
-		t=${DESTDIR}$$1; \
-		shift; \
-		${ECHO} $$t -\> $$l; \
-		ln -fs $$l $$t; \
-	done; true
-.endif
+.endif !target(realinstall)
 
 .if defined(SCRIPTS) && !empty(SCRIPTS)
 realinstall: _scriptsinstall
+.ORDER: beforeinstall _scriptsinstall
 
 SCRIPTSDIR?=	${BINDIR}
 SCRIPTSOWN?=	${BINOWN}
@@ -150,35 +138,30 @@ SCRIPTSDIR_${script:T}?=	${SCRIPTSDIR}
 SCRIPTSOWN_${script:T}?=	${SCRIPTSOWN}
 SCRIPTSGRP_${script:T}?=	${SCRIPTSGRP}
 SCRIPTSMODE_${script:T}?=	${SCRIPTSMODE}
-_scriptsinstall: SCRIPTSINS_${script:T}
-SCRIPTSINS_${script:T}: ${script}
+_scriptsinstall: _SCRIPTSINS_${script:T}
+_SCRIPTSINS_${script:T}: ${script}
 	${INSTALL} ${COPY} -o ${SCRIPTSOWN_${.ALLSRC:T}} \
 	    -g ${SCRIPTSGRP_${.ALLSRC:T}} -m ${SCRIPTSMODE_${.ALLSRC:T}} \
-	    ${_INSTALLFLAGS} ${.ALLSRC} \
+	    ${.ALLSRC} \
 	    ${DESTDIR}${SCRIPTSDIR_${.ALLSRC:T}}/${SCRIPTSNAME_${.ALLSRC:T}}
 .endfor
 .endif
 
-install: afterinstall _SUBDIR
+.include <bsd.files.mk>
+.include <bsd.incs.mk>
+.include <bsd.links.mk>
+
 .if !defined(NOMAN)
-afterinstall: realinstall maninstall
-.else
-afterinstall: realinstall
-.endif
+realinstall: _maninstall
+.ORDER: beforeinstall _maninstall
 .endif
 
-DISTRIBUTION?=	bin
-.if !target(distribute)
-distribute: _SUBDIR
-.for dist in ${DISTRIBUTION}
-	cd ${.CURDIR} ; $(MAKE) install DESTDIR=${DISTDIR}/${dist} SHARED=copies
-.endfor
 .endif
 
 .if !target(lint)
-lint: ${SRCS} _SUBDIR
+lint: ${SRCS}
 .if defined(PROG)
-	@${LINT} ${LINTFLAGS} ${CFLAGS} ${.ALLSRC} | more 2>&1
+	@${LINT} ${LINTFLAGS} ${.ALLSRC} | more 2>&1
 .endif
 .endif
 
@@ -187,7 +170,7 @@ tags:
 .endif
 
 .if !target(tags)
-tags: ${SRCS} _SUBDIR
+tags: ${SRCS}
 .if defined(PROG)
 	@cd ${.CURDIR} && gtags ${GTAGSFLAGS} ${.OBJDIR}
 .if defined(HTML)
@@ -198,17 +181,6 @@ tags: ${SRCS} _SUBDIR
 
 .if !defined(NOMAN)
 .include <bsd.man.mk>
-.else
-.if !target(all-man)
-all-man:
-.endif
-.if !target(maninstall)
-maninstall:
-.endif
-.endif
-
-.if !target(regress)
-regress:
 .endif
 
 .if ${OBJFORMAT} != aout || make(checkdpadd) || defined(NEED_LIBNAMES)
@@ -217,8 +189,10 @@ regress:
 
 .include <bsd.dep.mk>
 
-.if defined(PROG) && !exists(${DEPENDFILE})
+.if defined(PROG) && !exists(${.OBJDIR}/${DEPENDFILE})
 ${OBJS}: ${SRCS:M*.h}
 .endif
 
 .include <bsd.obj.mk>
+
+.include <bsd.sys.mk>

@@ -1,5 +1,5 @@
 #	from: @(#)bsd.subdir.mk	5.9 (Berkeley) 2/1/91
-# $FreeBSD: src/share/mk/bsd.subdir.mk,v 1.30.2.1 2001/04/25 09:08:36 ru Exp $
+# $FreeBSD: src/share/mk/bsd.subdir.mk,v 1.30.2.5 2002/07/22 14:21:51 ru Exp $
 #
 # The include file <bsd.subdir.mk> contains the default targets
 # for building subdirectories. 
@@ -18,65 +18,44 @@
 #		Each of the targets will execute the same target in the
 #		subdirectories.
 #
-# SUBDIR_CHANGE A directory-tree that contains overrides for
-#               corresponding build subdirs.
-#		Each override is a file containing one subdirname per line:
-#                  'subdirlist'  is a pure override
-#		   'subdirdrop'  drops directories from the build
-#		   'subdiradd'   adds directories to the build
-#
 # +++ targets +++
 #
 #	distribute:
 # 		This is a variant of install, which will
 # 		put the stuff into the right "distribution".
 #
-#	afterdistribute, afterinstall, all, all-man, beforeinstall, checkdpadd,
+#	afterinstall, all, all-man, beforeinstall, checkdpadd,
 #	clean, cleandepend, cleandir, depend, install, lint, maninstall,
 #	obj, objlink, realinstall, regress, tags
 #
 
-.if !target(__initialized__)
-__initialized__:
-.if exists(${.CURDIR}/../Makefile.inc)
-.include "${.CURDIR}/../Makefile.inc"
-.endif
-.endif  
+.include <bsd.init.mk>
 
-.MAIN: all
-
-.if defined(SUBDIR_CHANGE) && !empty(SUBDIR_CHANGE) && \
-	exists(${SUBDIR_CHANGE}/${DIRPRFX}/subdirlist)
-SUBDIR!=cat ${SUBDIR_CHANGE}/${DIRPRFX}/subdirlist
+DISTRIBUTION?=	bin
+.if !target(distribute)
+distribute:
+.for dist in ${DISTRIBUTION}
+	cd ${.CURDIR}; \
+	    ${MAKE} install -DNO_SUBDIR DESTDIR=${DISTDIR}/${dist} SHARED=copies
+.endfor
 .endif
 
-.if defined(SUBDIR_CHANGE) && !empty(SUBDIR_CHANGE) && \
-	exists(${SUBDIR_CHANGE}/${DIRPRFX}/subdiradd)
-_SUBDIR_EXTRA!=cat ${SUBDIR_CHANGE}/${DIRPRFX}/subdiradd
-.endif
-
-_SUBDIRUSE: .USE
-	@for entry in ${SUBDIR} ${_SUBDIR_EXTRA}; do \
-		(if ! (test -f ${SUBDIR_CHANGE}/${DIRPRFX}/subdirdrop && \
-			grep -w $${entry} \
-			    ${SUBDIR_CHANGE}/${DIRPRFX}/subdirdrop \
-				> /dev/null); then \
-			if test -d ${.CURDIR}/$${entry}.${MACHINE_ARCH}; then \
-				${ECHODIR} \
-				    "===> ${DIRPRFX}$${entry}.${MACHINE_ARCH}"; \
-				edir=$${entry}.${MACHINE_ARCH}; \
-				cd ${.CURDIR}/$${edir}; \
-			else \
-				${ECHODIR} "===> ${DIRPRFX}$$entry"; \
-				edir=$${entry}; \
-				cd ${.CURDIR}/$${edir}; \
-			fi; \
-			${MAKE} ${.TARGET:realinstall=install} \
-				SUBDIR_CHANGE=${SUBDIR_CHANGE} \
-				DIRPRFX=${DIRPRFX}$$edir/; \
-			fi; \
-		); \
+_SUBDIR: .USE
+.if defined(SUBDIR) && !empty(SUBDIR) && !defined(NO_SUBDIR)
+	@for entry in ${SUBDIR}; do \
+		if test -d ${.CURDIR}/$${entry}.${MACHINE_ARCH}; then \
+			${ECHODIR} "===> ${DIRPRFX}$${entry}.${MACHINE_ARCH}"; \
+			edir=$${entry}.${MACHINE_ARCH}; \
+			cd ${.CURDIR}/$${edir}; \
+		else \
+			${ECHODIR} "===> ${DIRPRFX}$$entry"; \
+			edir=$${entry}; \
+			cd ${.CURDIR}/$${edir}; \
+		fi; \
+		${MAKE} ${.TARGET:realinstall=install} \
+		    DIRPRFX=${DIRPRFX}$$edir/; \
 	done
+.endif
 
 ${SUBDIR}::
 	@if test -d ${.TARGET}.${MACHINE_ARCH}; then \
@@ -87,11 +66,21 @@ ${SUBDIR}::
 	${MAKE} all
 
 
-.for __target in all all-man checkdpadd clean cleandepend cleandir depend lint \
-		 maninstall obj objlink regress tags
-.if !target(${__target})
-${__target}: _SUBDIRUSE
+.for __target in all all-man checkdpadd clean cleandepend cleandir \
+    depend distribute lint maninstall \
+    obj objlink realinstall regress tags
+${__target}: _SUBDIR
+.endfor
+
+.for __target in files includes
+.for __stage in build install
+${__stage}${__target}:
+.if make(${__stage}${__target})
+${__stage}${__target}: _SUBDIR
 .endif
+.endfor
+${__target}:
+	cd ${.CURDIR}; ${MAKE} build${__target}; ${MAKE} install${__target}
 .endfor
 
 .if !target(install)
@@ -101,18 +90,6 @@ beforeinstall:
 .if !target(afterinstall)
 afterinstall:
 .endif
-install: afterinstall
-afterinstall: realinstall
-realinstall: beforeinstall _SUBDIRUSE
-.endif
-
-DISTRIBUTION?=	bin
-.if !target(afterdistribute)
-afterdistribute:
-.endif
-.if !target(distribute)
-distribute: _SUBDIRUSE
-.for dist in ${DISTRIBUTION}
-	cd ${.CURDIR} ; ${MAKE} afterdistribute DESTDIR=${DISTDIR}/${dist}
-.endfor
+install: beforeinstall realinstall afterinstall
+.ORDER: beforeinstall realinstall afterinstall
 .endif

@@ -1,5 +1,5 @@
 #	@(#)bsd.README	8.2 (Berkeley) 4/2/94
-# $FreeBSD: src/share/mk/bsd.README,v 1.15.2.3 2001/04/25 14:05:25 ru Exp $
+# $FreeBSD: src/share/mk/bsd.README,v 1.15.2.6 2002/07/19 08:34:07 ru Exp $
 
 XXX This document is seriously out of date, it is currenly being revised.
 
@@ -90,10 +90,14 @@ environment or otherwise.  You probably don't want to touch this file.
 The include file <bsd.man.mk> handles installing manual pages and their
 links.
 
-It has a single target:
+It has three targets:
 
+	all-man:
+		build manual pages.
 	maninstall:
-		Install the manual pages and their links.
+		install the manual pages and their links.
+	manlint:
+		verify the validity of manual pages.
 
 It sets/uses the following variables:
 
@@ -192,6 +196,11 @@ CLEANDIRS	additional directories to remove during clean and cleandir
 
 COPTS		Additional flags to the compiler when creating C objects.
 
+FILES		A list of non-executable files.
+		The installation is controlled by the FILESNAME, FILESOWN,
+		FILESGRP, FILESMODE, FILESDIR variables that can be
+		further specialized by FILES<VAR>_<file>.
+
 HIDEGAME	If HIDEGAME is defined, the binary is installed in
 		/usr/games/hide, and a symbolic link is created to
 		/usr/games/dm.
@@ -217,11 +226,17 @@ MAN		Manual pages (should end in .1 - .9).  If no MAN variable
 PROG		The name of the program to build.  If not supplied, nothing
 		is built.
 
+PROG_CXX	If defined, the name of the program to build.  Also
+		causes <bsd.prog.mk> to link the program with the
+		standard C++ library.  PROG_CXX overrides the value
+		of PROG if PROG is also set.
+
 PROGNAME	The name that the above program will be installed as, if
 		different from ${PROG}.
 
 SRCS		List of source files to build the program.  If SRCS is not
-		defined, it's assumed to be ${PROG}.c.
+		defined, it's assumed to be ${PROG}.c or, if PROG_CXX is
+		defined, ${PROG_CXX}.cc.
 
 DPADD		Additional dependencies for the program.  Usually used for
 		libraries.  For example, to depend on the compatibility and

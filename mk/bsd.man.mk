@@ -1,4 +1,4 @@
-# $FreeBSD: src/share/mk/bsd.man.mk,v 1.31.2.4 2001/04/26 16:53:29 ru Exp $
+# $FreeBSD: src/share/mk/bsd.man.mk,v 1.31.2.9 2002/07/17 19:08:23 ru Exp $
 #
 # The include file <bsd.man.mk> handles installing manual pages and 
 # their links.
@@ -49,11 +49,15 @@
 #		Install the manual pages and their links.
 #
 
+.if !target(__<bsd.init.mk>__)
+.error bsd.man.mk cannot be included directly.
+.endif
+
 MINSTALL=	${INSTALL} ${COPY} -o ${MANOWN} -g ${MANGRP} -m ${MANMODE}
 
 CATDIR=		${MANDIR:H:S/$/\/cat/}
 CATEXT=		.cat
-MROFF_CMD?=	groff -Tascii -mtty-char -man
+MROFF_CMD?=	groff -Tascii -mtty-char -man -t
 
 MCOMPRESS_CMD?=	${COMPRESS_CMD}
 MCOMPRESS_EXT?=	${COMPRESS_EXT}
@@ -70,11 +74,10 @@ MAN+=	${MAN${sect}}
 .endfor
 .endif
 
-all-man:
+_manpages:
+all-man: _manpages
 
 .if defined(NOMANCOMPRESS)
-
-COPY=		-c
 
 # Make special arrangements to filter to a temporary file at build time
 # for NOMANCOMPRESS.
@@ -92,13 +95,13 @@ CLEANFILES+=	${MAN:T:S/$/${FILTEXTENSION}/g}
 CLEANFILES+=	${MAN:T:S/$/${CATEXT}${FILTEXTENSION}/g}
 .for page in ${MAN}
 .for target in ${page:T:S/$/${FILTEXTENSION}/g}
-all-man: ${target}
+_manpages: ${target}
 ${target}: ${page}
 	${MANFILTER} < ${.ALLSRC} > ${.TARGET}
 .endfor
 .if defined(MANBUILDCAT) && !empty(MANBUILDCAT)
 .for target in ${page:T:S/$/${CATEXT}${FILTEXTENSION}/g}
-all-man: ${target}
+_manpages: ${target}
 ${target}: ${page}
 	${MANFILTER} < ${.ALLSRC} | ${MROFF_CMD} > ${.TARGET}
 .endfor
@@ -111,11 +114,13 @@ CLEANFILES+=	${MAN:T:S/$/${CATEXT}/g}
 .if defined(MANBUILDCAT) && !empty(MANBUILDCAT)
 .for page in ${MAN}
 .for target in ${page:T:S/$/${CATEXT}/g}
-all-man: ${target}
+_manpages: ${target}
 ${target}: ${page}
 	${MROFF_CMD} ${.ALLSRC} > ${.TARGET}
 .endfor
 .endfor
+.else
+_manpages: ${MAN}
 .endif
 .endif
 .endif
@@ -129,7 +134,7 @@ CLEANFILES+=	${MAN:T:S/$/${MCOMPRESS_EXT}/g}
 CLEANFILES+=	${MAN:T:S/$/${CATEXT}${MCOMPRESS_EXT}/g}
 .for page in ${MAN}
 .for target in ${page:T:S/$/${MCOMPRESS_EXT}/}
-all-man: ${target}
+_manpages: ${target}
 ${target}: ${page}
 .if defined(MANFILTER)
 	${MANFILTER} < ${.ALLSRC} | ${MCOMPRESS_CMD} > ${.TARGET}
@@ -139,7 +144,7 @@ ${target}: ${page}
 .endfor
 .if defined(MANBUILDCAT) && !empty(MANBUILDCAT)
 .for target in ${page:T:S/$/${CATEXT}${MCOMPRESS_EXT}/}
-all-man: ${target}
+_manpages: ${target}
 ${target}: ${page}
 .if defined(MANFILTER)
 	${MANFILTER} < ${.ALLSRC} | ${MROFF_CMD} | ${MCOMPRESS_CMD} > ${.TARGET}
@@ -153,9 +158,10 @@ ${target}: ${page}
 
 .endif
 
-maninstall::
+maninstall: _maninstall
+_maninstall:
 .if defined(MAN) && !empty(MAN)
-maninstall:: ${MAN}
+_maninstall: ${MAN}
 .if defined(NOMANCOMPRESS)
 .if defined(MANFILTER)
 .for page in ${MAN}
@@ -228,4 +234,17 @@ maninstall:: ${MAN}
 		ln $${l}${ZEXT} $${t}${ZEXT}; \
 	done
 .endif
+.endif
+
+manlint:
+.if defined(MAN) && !empty(MAN)
+.for page in ${MAN}
+manlint: ${page}lint
+${page}lint: ${page}
+.if defined(MANFILTER)
+	${MANFILTER} < ${.ALLSRC} | ${MROFF_CMD} -ww -z
+.else
+	${MROFF_CMD} -ww -z ${.ALLSRC}
+.endif
+.endfor
 .endif

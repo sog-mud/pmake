@@ -1,5 +1,5 @@
 #	from: @(#)bsd.doc.mk	5.3 (Berkeley) 1/2/91
-# $FreeBSD: src/share/mk/bsd.doc.mk,v 1.47.2.1 2001/04/25 09:08:36 ru Exp $
+# $FreeBSD: src/share/mk/bsd.doc.mk,v 1.47.2.4 2002/07/17 19:08:23 ru Exp $
 #
 # The include file <bsd.doc.mk> handles installing BSD troff documents.
 #
@@ -14,12 +14,7 @@
 #
 # 	[incomplete]
 
-.if !target(__initialized__)
-__initialized__:
-.if exists(${.CURDIR}/../Makefile.inc)
-.include "${.CURDIR}/../Makefile.inc"
-.endif
-.endif
+.include <bsd.init.mk>
 
 PRINTERDEVICE?=	ascii
 
@@ -87,7 +82,6 @@ COMPAT?=	-C
 
 .PATH: ${.CURDIR} ${SRCDIR}
 
-.MAIN:	all
 all:	${DFILE}
 
 .if !target(print)
@@ -106,7 +100,6 @@ CLEANFILES+=	${DOC}.ascii ${DOC}.ascii${DCOMPRESS_EXT} \
 		${DOC}.ps ${DOC}.ps${DCOMPRESS_EXT} \
 		${DOC}.html ${DOC}-*.html
 
-FILES?=	${SRCS}
 realinstall:
 .if ${PRINTERDEVICE} == "html"
 	cd ${SRCDIR}; \
@@ -115,25 +108,6 @@ realinstall:
 .else
 	${INSTALL} ${COPY} -o ${BINOWN} -g ${BINGRP} -m ${BINMODE} \
 		${DFILE} ${DESTDIR}${BINDIR}/${VOLUME}
-.endif
-
-install:	beforeinstall realinstall afterinstall
-
-.if !target(beforeinstall)
-beforeinstall:
-
-.endif
-.if !target(afterinstall)
-afterinstall:
-
-.endif
-
-DISTRIBUTION?=	doc
-.if !target(distribute)
-distribute:
-.for dist in ${DISTRIBUTION}
-	cd ${.CURDIR} ; $(MAKE) install DESTDIR=${DISTDIR}/${dist} SHARED=copies
-.endfor
 .endif
 
 spell: ${SRCS}
@@ -162,16 +136,6 @@ ${DFILE}: ${SRCS} _stamp.extraobjs
 .endif
 .endif
 
-.if !target(all-man)
-all-man:
-.endif
-
-.if !target(maninstall)
-maninstall:
-.endif
-
-.if !target(regress)
-regress:
-.endif
+DISTRIBUTION?=	doc
 
 .include <bsd.obj.mk>

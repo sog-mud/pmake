@@ -1,4 +1,4 @@
-# $FreeBSD: src/share/mk/bsd.own.mk,v 1.27 2000/01/14 07:41:11 rgrimes Exp $
+# $FreeBSD: src/share/mk/bsd.own.mk,v 1.27.2.4 2002/07/22 14:21:51 ru Exp $
 #
 # The include file <bsd.own.mk> set common variables for owner,
 # group, mode, and directories. Defaults are in brackets.
@@ -38,14 +38,6 @@
 # BINMODE	Binary mode. [555]
 #
 # NOBINMODE	Mode for non-executable files. [444]
-#
-# INCOWN	Include owner. [root]
-#
-# INCGRP	Include group. [wheel]
-#
-# INCMODE	Include mode. [444]
-#
-# INCDIR	Base path for include files. [/usr/include]
 #
 # LIBDIR	Base path for libraries. [/usr/lib]
 #
@@ -120,38 +112,18 @@
 #
 # NLSOWN	National Language Support files owner. [${SHAREGRP}]
 #
-# NLSMODE	National Language Support files mode. [${NONBINMODE}]
+# NLSMODE	National Language Support files mode. [${NOBINMODE}]
 #
 # INCLUDEDIR	Base path for standard C include files [/usr/include]
 
-# This is only here for bootstrapping and is not officially exported
-# from here.  It has normally already been defined in sys.mk.
-MACHINE_ARCH?=	i386
-
-#
-# The build tools are indirected by /usr/bin/objformat which determines the
-# object format from the OBJFORMAT environment variable and if this is not
-# defined, it reads /etc/objformat.
-#
-.if exists(/etc/objformat) && !defined(OBJFORMAT)
-.include "/etc/objformat"
-.endif
-
-# Default executable format
-OBJFORMAT?=	elf
+.if !target(__<bsd.own.mk>__)
+__<bsd.own.mk>__:
 
 # Binaries
 BINOWN?=	root
 BINGRP?=	wheel
 BINMODE?=	555
 NOBINMODE?=	444
-
-GAMEGRP?=	games
-
-INCOWN?=	root
-INCGRP?=	wheel
-INCMODE?=	444
-INCDIR?=	/usr/include
 
 KMODDIR?=	/modules
 KMODOWN?=	${BINOWN}
@@ -196,7 +168,7 @@ INFOMODE?=	${NOBINMODE}
 NLSDIR?=	${SHAREDIR}/nls
 NLSGRP?=	${SHAREOWN}
 NLSOWN?=	${SHAREGRP}
-NLSMODE?=	${NONBINMODE}
+NLSMODE?=	${NOBINMODE}
 
 INCLUDEDIR?=	/usr/include
 
@@ -208,3 +180,5 @@ STRIP?=		-s
 COPY?=		-c
 COMPRESS_CMD?=	gzip -cn
 COMPRESS_EXT?=	.gz
+
+.endif !target(__<bsd.own.mk>__)
