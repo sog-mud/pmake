@@ -1,3 +1,7 @@
+#
+# $Id: README,v 1.3 2004-01-16 16:40:03 fjoe Exp $
+#
+
 This is a port of BSD make (taken directly from FreeBSD 3.4-STABLE).
 
 I had to add err.c/err.h from FreeBSD libc and wrote simple Makefile

@@ -1,0 +1,8 @@
+#
+# $Id: UPGRADE,v 1.1 2004-01-16 16:40:03 fjoe Exp $
+#
+
+- Makefile -> Makefile.pmake, PROG=pmake, CFLAGS+="-DFBSDID(x)="
+- remove __unused (can't do this with -D__unused= because some
+Linux headers contain struct fields with this name)
+- #ifdef (__FreeBSD__) for sysctl code in main.c
