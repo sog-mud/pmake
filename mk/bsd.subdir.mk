@@ -1,5 +1,5 @@
 #	from: @(#)bsd.subdir.mk	5.9 (Berkeley) 2/1/91
-# $FreeBSD: src/share/mk/bsd.subdir.mk,v 1.25.2.1 1999/08/29 16:47:48 peter Exp $
+# $FreeBSD: src/share/mk/bsd.subdir.mk,v 1.30.2.1 2001/04/25 09:08:36 ru Exp $
 #
 # The include file <bsd.subdir.mk> contains the default targets
 # for building subdirectories. 
@@ -31,7 +31,7 @@
 # 		This is a variant of install, which will
 # 		put the stuff into the right "distribution".
 #
-#	afterdistribute, afterinstall, all, beforeinstall, checkdpadd,
+#	afterdistribute, afterinstall, all, all-man, beforeinstall, checkdpadd,
 #	clean, cleandepend, cleandir, depend, install, lint, maninstall,
 #	obj, objlink, realinstall, regress, tags
 #
@@ -51,7 +51,7 @@ SUBDIR!=cat ${SUBDIR_CHANGE}/${DIRPRFX}/subdirlist
 .endif
 
 .if defined(SUBDIR_CHANGE) && !empty(SUBDIR_CHANGE) && \
-	exists(${SUBDIR_CHANGE}/${DIRPRFX}/subdirlist)
+	exists(${SUBDIR_CHANGE}/${DIRPRFX}/subdiradd)
 _SUBDIR_EXTRA!=cat ${SUBDIR_CHANGE}/${DIRPRFX}/subdiradd
 .endif
 
@@ -61,10 +61,10 @@ _SUBDIRUSE: .USE
 			grep -w $${entry} \
 			    ${SUBDIR_CHANGE}/${DIRPRFX}/subdirdrop \
 				> /dev/null); then \
-			if test -d ${.CURDIR}/$${entry}.${MACHINE}; then \
+			if test -d ${.CURDIR}/$${entry}.${MACHINE_ARCH}; then \
 				${ECHODIR} \
-				    "===> ${DIRPRFX}$${entry}.${MACHINE}"; \
-				edir=$${entry}.${MACHINE}; \
+				    "===> ${DIRPRFX}$${entry}.${MACHINE_ARCH}"; \
+				edir=$${entry}.${MACHINE_ARCH}; \
 				cd ${.CURDIR}/$${edir}; \
 			else \
 				${ECHODIR} "===> ${DIRPRFX}$$entry"; \
@@ -79,15 +79,15 @@ _SUBDIRUSE: .USE
 	done
 
 ${SUBDIR}::
-	@if test -d ${.TARGET}.${MACHINE}; then \
-		cd ${.CURDIR}/${.TARGET}.${MACHINE}; \
+	@if test -d ${.TARGET}.${MACHINE_ARCH}; then \
+		cd ${.CURDIR}/${.TARGET}.${MACHINE_ARCH}; \
 	else \
 		cd ${.CURDIR}/${.TARGET}; \
 	fi; \
 	${MAKE} all
 
 
-.for __target in all checkdpadd clean cleandepend cleandir depend lint \
+.for __target in all all-man checkdpadd clean cleandepend cleandir depend lint \
 		 maninstall obj objlink regress tags
 .if !target(${__target})
 ${__target}: _SUBDIRUSE

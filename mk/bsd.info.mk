@@ -1,4 +1,4 @@
-# $FreeBSD: src/share/mk/bsd.info.mk,v 1.54.2.1 1999/08/29 16:47:42 peter Exp $
+# $FreeBSD: src/share/mk/bsd.info.mk,v 1.57.2.2 2001/04/25 09:08:36 ru Exp $
 #
 # The include file <bsd.info.mk> handles installing GNU (tech)info files.
 # Texinfo is a documentation system that uses a single source
@@ -40,11 +40,13 @@
 #
 # INFOOWN	Info owner. [${SHAREOWN}]
 #
-# INFOSECTION	??? [Miscellaneous]
+# INFOSECTION	Default section (if one could not be found in
+#		the Info file). [Miscellaneous]
 #
-# INFOTMPL	??? [${INFODIR}/dir-tmpl]
+# INSTALLINFO	A program for installing directory entries from Info
+#		file in the ${INFODIR}/${INFODIRFILE}. [install-info]
 #
-# INSTALLINFO	??? [install-info]
+# INSTALLINFOFLAGS	Options for ${INSTALLINFO} command. [--quiet]
 #
 # INSTALLINFODIRS	???
 #
@@ -87,13 +89,12 @@ MAKEINFO?=	makeinfo
 MAKEINFOFLAGS+=	--no-split # simplify some things, e.g., compression
 SRCDIR?=	${.CURDIR}
 INFODIRFILE?=   dir
-INFOTMPL?=      ${INFODIR}/dir-tmpl
 INSTALLINFO?=   install-info
+INSTALLINFOFLAGS+=--quiet
 INFOSECTION?=   Miscellaneous
 ICOMPRESS_CMD?=	${COMPRESS_CMD}
 ICOMPRESS_EXT?=	${COMPRESS_EXT}
 FORMATS?=	info
-GREP?=		grep
 INFO2HTML?=	info2html
 TEX?=		tex
 DVIPS?=		dvips
@@ -160,25 +161,10 @@ ${x:S/$/${ICOMPRESS_EXT}/}:	${x}
 .for x in ${INFO}
 INSTALLINFODIRS+= ${x:S/$/-install/}
 ${x:S/$/-install/}: ${DESTDIR}${INFODIR}/${INFODIRFILE}
-	-__section=`${GREP} "^INFO-DIR-SECTION" ${x}.info`; \
-	__entry=`${GREP} "^START-INFO-DIR-ENTRY" ${x}.info`; \
-	if [ ! -z "$$__section" ]; then \
-		if [ ! -z "$$__entry" ]; then \
-			${INSTALLINFO}  ${x}.info ${DESTDIR}${INFODIR}/${INFODIRFILE}; \
-		else \
-			${INSTALLINFO}  --entry=${INFOENTRY_${x}} \
-				${x}.info ${DESTDIR}${INFODIR}/${INFODIRFILE}; \
-		fi \
-	else \
-		if [ ! -z "$$__entry" ]; then \
-			${INSTALLINFO}  --section=${INFOSECTION} \
-				${x}.info ${DESTDIR}${INFODIR}/${INFODIRFILE}; \
-		else \
-			${INSTALLINFO}  --section=${INFOSECTION} \
-       				--entry=${INFOENTRY_${x}} \
-				${x}.info ${DESTDIR}${INFODIR}/${INFODIRFILE}; \
-		fi \
-	fi
+	${INSTALLINFO} ${INSTALLINFOFLAGS} \
+	    --defsection=${INFOSECTION} \
+	    --defentry=${INFOENTRY_${x}} \
+	    ${x}.info ${DESTDIR}${INFODIR}/${INFODIRFILE}
 .endfor
 
 .PHONY: ${INSTALLINFODIRS}
@@ -221,7 +207,16 @@ install: ${INSTALLINFODIRS} _SUBDIR
 		${INFO:S/$/.info.*.html/} ${DESTDIR}${INFODIR}
 .endif
 .else
-install:
+# The indirection in the following is to avoid the null install rule
+# "install:" from being overridden by the implicit .sh rule if there
+# happens to be a source file named install.sh.  This assumes that there
+# is no source file named __null_install.sh.
+install: __null_install
+__null_install:
+.endif
+
+.if !target(all-man)
+all-man: _SUBDIR
 .endif
 
 .if !target(maninstall)

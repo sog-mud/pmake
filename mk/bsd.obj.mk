@@ -1,4 +1,4 @@
-# $FreeBSD: src/share/mk/bsd.obj.mk,v 1.26.2.1 1999/08/29 16:47:45 peter Exp $
+# $FreeBSD: src/share/mk/bsd.obj.mk,v 1.30.2.6 2001/04/26 16:55:19 ru Exp $
 #
 # The include file <bsd.obj.mk> handles creating the 'obj' directory
 # and cleaning up object files, etc.
@@ -31,10 +31,6 @@
 # NOOBJ		Do not create object directories.  This should not be set
 #		if anything is built.
 #
-# OBJLINK	Create a symbolic link from ${.CURDIR}/obj to
-#		${CANONICALOBJDIR}.  Note: this BREAKS the read-only source
-#		tree rule!
-#
 # +++ targets +++
 #
 #	clean:
@@ -60,7 +56,7 @@ objwarn:
 .if !defined(NOOBJ) && ${.OBJDIR} != ${CANONICALOBJDIR}
 .if ${.OBJDIR} == ${.CURDIR}
 	@${ECHO} "Warning: Object directory not changed from original ${.CURDIR}"
-.elif !defined(MAKEOBJDIR) && !defined(MAKEOBJDIRPREFIX) && !defined(OBJLINK)
+.elif !defined(MAKEOBJDIR) && !defined(MAKEOBJDIRPREFIX)
 	@${ECHO} "Warning: Using ${.OBJDIR} as object directory instead of\
 		canonical ${CANONICALOBJDIR}"
 .endif
@@ -70,7 +66,6 @@ objwarn:
 .if defined(NOOBJ)
 obj:
 .else
-.if !defined(OBJLINK)
 obj:	_SUBDIR
 	@if ! test -d ${CANONICALOBJDIR}/; then \
 		mkdir -p ${CANONICALOBJDIR}; \
@@ -80,19 +75,6 @@ obj:	_SUBDIR
 		fi; \
 		${ECHO} "${CANONICALOBJDIR} created for ${.CURDIR}"; \
 	fi
-.else
-obj:	_SUBDIR
-	@if ! test -d ${CANONICALOBJDIR}/; then \
-		mkdir -p ${CANONICALOBJDIR}; \
-		if ! test -d ${CANONICALOBJDIR}/; then \
-			${ECHO} "Unable to create ${CANONICALOBJDIR}."; \
-			exit 1; \
-		fi; \
-		rm -f ${.CURDIR}/obj; \
-		ln -s ${CANONICALOBJDIR} ${.CURDIR}/obj; \
-		${ECHO} "${.CURDIR} -> ${CANONICALOBJDIR}"; \
-	fi
-.endif
 .endif
 .endif
 
@@ -115,11 +97,11 @@ whereobj:
 .endif
 
 cleanobj:
-	@if [ -d ${CANONICALOBJDIR}/ ]; then \
-		rm -rf ${CANONICALOBJDIR}; \
-	else \
-		cd ${.CURDIR} && ${MAKE} clean cleandepend; \
-	fi
+.if ${CANONICALOBJDIR} != ${.CURDIR} && exists(${CANONICALOBJDIR}/)
+	@rm -rf ${CANONICALOBJDIR}
+.else
+	@cd ${.CURDIR} && ${MAKE} clean cleandepend
+.endif
 	@if [ -h ${.CURDIR}/obj ]; then rm -f ${.CURDIR}/obj; fi
 
 .if !target(clean)
@@ -169,8 +151,8 @@ _SUBDIR: .USE
 .if defined(SUBDIR) && !empty(SUBDIR)
 	@for entry in ${SUBDIR}; do \
 		(${ECHODIR} "===> ${DIRPRFX}$$entry"; \
-		if test -d ${.CURDIR}/$${entry}.${MACHINE}; then \
-			cd ${.CURDIR}/$${entry}.${MACHINE}; \
+		if test -d ${.CURDIR}/$${entry}.${MACHINE_ARCH}; then \
+			cd ${.CURDIR}/$${entry}.${MACHINE_ARCH}; \
 		else \
 			cd ${.CURDIR}/$${entry}; \
 		fi; \

@@ -1,4 +1,4 @@
-# $FreeBSD: src/share/mk/bsd.own.mk,v 1.21.2.2 1999/11/09 00:13:13 phantom Exp $
+# $FreeBSD: src/share/mk/bsd.own.mk,v 1.27 2000/01/14 07:41:11 rgrimes Exp $
 #
 # The include file <bsd.own.mk> set common variables for owner,
 # group, mode, and directories. Defaults are in brackets.
@@ -33,20 +33,27 @@
 #
 # BINOWN	Binary owner. [root]
 #
-# BINGRP	Binary group. [bin]
+# BINGRP	Binary group. [wheel]
 #
 # BINMODE	Binary mode. [555]
 #
 # NOBINMODE	Mode for non-executable files. [444]
 #
+# INCOWN	Include owner. [root]
 #
-# LIBDIR	Base path for libraries. [/usr/local/lib]
+# INCGRP	Include group. [wheel]
 #
-# LIBCOMPATDIR	Base path for compat libraries. [/usr/local/lib/compat]
+# INCMODE	Include mode. [444]
 #
-# LIBDATADIR	Base path for misc. utility data files. [/usr/local/libdata]
+# INCDIR	Base path for include files. [/usr/include]
 #
-# LINTLIBDIR	Base path for lint libraries. [/usr/local/libdata/lint]
+# LIBDIR	Base path for libraries. [/usr/lib]
+#
+# LIBCOMPATDIR	Base path for compat libraries. [/usr/lib/compat]
+#
+# LIBDATADIR	Base path for misc. utility data files. [/usr/libdata]
+#
+# LINTLIBDIR	Base path for lint libraries. [/usr/libdata/lint]
 #
 # SHLIBDIR	Base path for shared libraries. [${LIBDIR}]
 #
@@ -58,7 +65,7 @@
 #
 #
 # KMODDIR	Base path for loadable kernel modules
-#		(see lkm(4)). [/lkm]
+#		(see kld(4)). [/modules]
 #
 # KMODOWN	KLD owner. [${BINOWN}]
 #
@@ -68,11 +75,11 @@
 #
 #
 # SHAREDIR	Base path for architecture-independent ascii
-#		text files. [/usr/local/share]
+#		text files. [/usr/share]
 #
 # SHAREOWN	ASCII text file owner. [root]
 #
-# SHAREGRP	ASCII text file group. [bin]
+# SHAREGRP	ASCII text file group. [wheel]
 #
 # SHAREMODE	ASCII text file mode. [${NOBINMODE}]
 #
@@ -97,7 +104,7 @@
 # INFOMODE	Info mode. [${NOBINMODE}]
 #
 #
-# MANDIR	Base path for manual installation. [/usr/local/man/man]
+# MANDIR	Base path for manual installation. [${SHAREDIR}/man/man]
 #
 # MANOWN	Manual owner. [${SHAREOWN}]
 #
@@ -115,7 +122,7 @@
 #
 # NLSMODE	National Language Support files mode. [${NONBINMODE}]
 #
-# INCLUDEDIR	Base path for standard C include files [/usr/local/include]
+# INCLUDEDIR	Base path for standard C include files [/usr/include]
 
 # This is only here for bootstrapping and is not officially exported
 # from here.  It has normally already been defined in sys.mk.
@@ -135,36 +142,43 @@ OBJFORMAT?=	elf
 
 # Binaries
 BINOWN?=	root
-BINGRP?=	bin
+BINGRP?=	wheel
 BINMODE?=	555
 NOBINMODE?=	444
 
+GAMEGRP?=	games
+
+INCOWN?=	root
+INCGRP?=	wheel
+INCMODE?=	444
+INCDIR?=	/usr/include
+
+KMODDIR?=	/modules
+KMODOWN?=	${BINOWN}
+KMODGRP?=	${BINGRP}
+KMODMODE?=	${BINMODE}
+
 .if ${OBJFORMAT} == aout
-LIBDIR?=	/usr/local/lib/aout
+LIBDIR?=	/usr/lib/aout
 .else
-LIBDIR?=	/usr/local/lib
+LIBDIR?=	/usr/lib
 .endif
-LIBCOMPATDIR?=	/usr/local/lib/compat
-LIBDATADIR?=	/usr/local/libdata
-LINTLIBDIR?=	/usr/local/libdata/lint
+LIBCOMPATDIR?=	/usr/lib/compat
+LIBDATADIR?=	/usr/libdata
+LINTLIBDIR?=	/usr/libdata/lint
 SHLIBDIR?=	${LIBDIR}
 LIBOWN?=	${BINOWN}
 LIBGRP?=	${BINGRP}
 LIBMODE?=	${NOBINMODE}
 
-KMODDIR?=	/lkm
-KMODOWN?=	${BINOWN}
-KMODGRP?=	${BINGRP}
-KMODMODE?=	${BINMODE}
-
 
 # Share files
-SHAREDIR?=	/usr/local/share
+SHAREDIR?=	/usr/share
 SHAREOWN?=	root
-SHAREGRP?=	bin
+SHAREGRP?=	wheel
 SHAREMODE?=	${NOBINMODE}
 
-MANDIR?=	/usr/local/man/man
+MANDIR?=	${SHAREDIR}/man/man
 MANOWN?=	${SHAREOWN}
 MANGRP?=	${SHAREGRP}
 MANMODE?=	${NOBINMODE}
@@ -184,7 +198,7 @@ NLSGRP?=	${SHAREOWN}
 NLSOWN?=	${SHAREGRP}
 NLSMODE?=	${NONBINMODE}
 
-INCLUDEDIR?=	/usr/local/include
+INCLUDEDIR?=	/usr/include
 
 # Common variables
 .if !defined(DEBUG_FLAGS)

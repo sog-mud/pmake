@@ -1,5 +1,5 @@
 #	from: @(#)bsd.prog.mk	5.26 (Berkeley) 6/25/91
-# $FreeBSD: src/share/mk/bsd.prog.mk,v 1.80.2.2 1999/08/29 16:47:47 peter Exp $
+# $FreeBSD: src/share/mk/bsd.prog.mk,v 1.86.2.3 2001/04/25 14:05:26 ru Exp $
 
 .if !target(__initialized__)
 __initialized__:
@@ -56,28 +56,32 @@ ${PROG}: ${OBJS}
 
 .endif
 
-.if	!defined(MAN1) && !defined(MAN2) && !defined(MAN3) && \
+.if	!defined(NOMAN) && !defined(MAN) && \
+	!defined(MAN1) && !defined(MAN2) && !defined(MAN3) && \
 	!defined(MAN4) && !defined(MAN5) && !defined(MAN6) && \
-	!defined(MAN7) && !defined(MAN8) && !defined(NOMAN) && \
+	!defined(MAN7) && !defined(MAN8) && !defined(MAN9) && \
 	!defined(MAN1aout)
-MAN1=	${PROG}.1
+MAN=	${PROG}.1
+MAN1=	${MAN}
 .endif
 .endif
 
 .MAIN: all
-all: objwarn ${PROG} all-man _SUBDIR
+.if !defined(NOMAN)
+all: objwarn ${PROG} ${SCRIPTS} all-man _SUBDIR
+.else
+all: objwarn ${PROG} ${SCRIPTS} _SUBDIR
+.endif
 
 CLEANFILES+= ${PROG} ${OBJS}
 
-.if defined(PROG) && !defined(NOEXTRADEPEND)
+.if defined(PROG)
 _EXTRADEPEND:
 .if ${OBJFORMAT} == aout
 	echo ${PROG}: `${CC} -Wl,-f ${CFLAGS} ${LDFLAGS} ${LDDESTDIR} \
 	    ${LDADD:S/^/-Wl,/}` >> ${DEPENDFILE}
 .else
-.if defined(DPADD) && !empty(DPADD)
-	echo ${PROG}: ${DPADD} >> ${DEPENDFILE}
-.endif
+	echo ${PROG}: ${LIBC} ${DPADD} >> ${DEPENDFILE}
 .endif
 .endif
 
@@ -86,10 +90,20 @@ _EXTRADEPEND:
 beforeinstall:
 .endif
 
+_INSTALLFLAGS:=	${INSTALLFLAGS}
+.for ie in ${INSTALLFLAGS_EDIT}
+_INSTALLFLAGS:=	${_INSTALLFLAGS${ie}}
+.endfor
+
 realinstall: beforeinstall
 .if defined(PROG)
+.if defined(PROGNAME)
 	${INSTALL} ${COPY} ${STRIP} -o ${BINOWN} -g ${BINGRP} -m ${BINMODE} \
-	    ${INSTALLFLAGS} ${PROG} ${DESTDIR}${BINDIR}
+	    ${_INSTALLFLAGS} ${PROG} ${DESTDIR}${BINDIR}/${PROGNAME}
+.else
+	${INSTALL} ${COPY} ${STRIP} -o ${BINOWN} -g ${BINGRP} -m ${BINMODE} \
+	    ${_INSTALLFLAGS} ${PROG} ${DESTDIR}${BINDIR}
+.endif
 .endif
 .if defined(HIDEGAME)
 	(cd ${DESTDIR}/${GBINDIR}; rm -f ${PROG}; ln -s dm ${PROG}; \
@@ -103,9 +117,46 @@ realinstall: beforeinstall
 		t=${DESTDIR}$$1; \
 		shift; \
 		${ECHO} $$t -\> $$l; \
-		rm -f $$t; \
-		ln ${LN_FLAGS} $$l $$t; \
+		ln -f $$l $$t; \
 	done; true
+.endif
+.if defined(SYMLINKS) && !empty(SYMLINKS)
+	@set ${SYMLINKS}; \
+	while test $$# -ge 2; do \
+		l=$$1; \
+		shift; \
+		t=${DESTDIR}$$1; \
+		shift; \
+		${ECHO} $$t -\> $$l; \
+		ln -fs $$l $$t; \
+	done; true
+.endif
+
+.if defined(SCRIPTS) && !empty(SCRIPTS)
+realinstall: _scriptsinstall
+
+SCRIPTSDIR?=	${BINDIR}
+SCRIPTSOWN?=	${BINOWN}
+SCRIPTSGRP?=	${BINGRP}
+SCRIPTSMODE?=	${BINMODE}
+
+.for script in ${SCRIPTS}
+.if defined(SCRIPTSNAME)
+SCRIPTSNAME_${script:T}?=	${SCRIPTSNAME}
+.else
+SCRIPTSNAME_${script:T}?=	${script:T:R}
+.endif
+SCRIPTSDIR_${script:T}?=	${SCRIPTSDIR}
+SCRIPTSOWN_${script:T}?=	${SCRIPTSOWN}
+SCRIPTSGRP_${script:T}?=	${SCRIPTSGRP}
+SCRIPTSMODE_${script:T}?=	${SCRIPTSMODE}
+_scriptsinstall: SCRIPTSINS_${script:T}
+SCRIPTSINS_${script:T}: ${script}
+	${INSTALL} ${COPY} -o ${SCRIPTSOWN_${.ALLSRC:T}} \
+	    -g ${SCRIPTSGRP_${.ALLSRC:T}} -m ${SCRIPTSMODE_${.ALLSRC:T}} \
+	    ${_INSTALLFLAGS} ${.ALLSRC} \
+	    ${DESTDIR}${SCRIPTSDIR_${.ALLSRC:T}}/${SCRIPTSNAME_${.ALLSRC:T}}
+.endfor
 .endif
 
 install: afterinstall _SUBDIR
@@ -147,9 +198,13 @@ tags: ${SRCS} _SUBDIR
 
 .if !defined(NOMAN)
 .include <bsd.man.mk>
-.elif !target(maninstall)
-maninstall:
+.else
+.if !target(all-man)
 all-man:
+.endif
+.if !target(maninstall)
+maninstall:
+.endif
 .endif
 
 .if !target(regress)

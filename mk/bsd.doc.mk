@@ -1,5 +1,5 @@
 #	from: @(#)bsd.doc.mk	5.3 (Berkeley) 1/2/91
-# $FreeBSD: src/share/mk/bsd.doc.mk,v 1.46.2.1 1999/08/29 16:47:41 peter Exp $
+# $FreeBSD: src/share/mk/bsd.doc.mk,v 1.47.2.1 2001/04/25 09:08:36 ru Exp $
 #
 # The include file <bsd.doc.mk> handles installing BSD troff documents.
 #
@@ -160,6 +160,10 @@ ${DFILE}: ${SRCS} _stamp.extraobjs
 	(cd ${SRCDIR}; ${ROFF} ${.ALLSRC:N_stamp.extraobjs}) | \
 	    ${DCOMPRESS_CMD} > ${.TARGET}
 .endif
+.endif
+
+.if !target(all-man)
+all-man:
 .endif
 
 .if !target(maninstall)

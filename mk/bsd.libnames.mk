@@ -1,4 +1,4 @@
-# $FreeBSD: src/share/mk/bsd.libnames.mk,v 1.20.2.3 1999/11/22 07:08:06 julian Exp $
+# $FreeBSD: src/share/mk/bsd.libnames.mk,v 1.28.2.2 2000/10/28 01:43:31 archie Exp $
 #
 # The include file <bsd.libnames.mk> define library names. 
 # Other include files (e.g. bsd.prog.mk, bsd.lib.mk) include this 
@@ -19,6 +19,7 @@ LIBCIPHER?=	${DESTDIR}${LIBDIR}/libcipher.a	# XXX in secure dist, not base
 LIBCOM_ERR=	${DESTDIR}${LIBDIR}/libcom_err.a
 LIBCOMPAT?=	${DESTDIR}${LIBDIR}/libcompat.a
 LIBCRYPT?=	${DESTDIR}${LIBDIR}/libcrypt.a
+LIBCRYPTO?=	${DESTDIR}${LIBDIR}/libcrypto.a	# XXX in secure dist, not base
 LIBCURSES?=	${DESTDIR}${LIBDIR}/libcurses.a
 LIBDES?=	${DESTDIR}${LIBDIR}/libdes.a	# XXX in secure dist, not base
 LIBDEVSTAT?=	${DESTDIR}${LIBDIR}/libdevstat.a
@@ -34,7 +35,10 @@ LIBGCC?=	${DESTDIR}${LIBDIR}/libgcc.a
 LIBGCC_PIC?=	${DESTDIR}${LIBDIR}/libgcc_pic.a
 LIBGMP?=	${DESTDIR}${LIBDIR}/libgmp.a
 LIBGNUREGEX?=	${DESTDIR}${LIBDIR}/libgnuregex.a
+LIBHISTORY?=	${DESTDIR}${LIBDIR}/libhistory.a
+LIBIPSEC?=	${DESTDIR}${LIBDIR}/libipsec.a
 LIBIPX?=	${DESTDIR}${LIBDIR}/libipx.a
+LIBISC?=	${DESTDIR}${LIBDIR}/libisc.a
 LIBKDB?=	${DESTDIR}${LIBDIR}/libkdb.a	# XXX in secure dist, not base
 LIBKRB?=	${DESTDIR}${LIBDIR}/libkrb.a	# XXX in secure dist, not base
 LIBKEYCAP?=	${DESTDIR}${LIBDIR}/libkeycap.a
@@ -45,6 +49,7 @@ LIBM?=		${DESTDIR}${LIBDIR}/libm.a
 LIBMD?=		${DESTDIR}${LIBDIR}/libmd.a
 LIBMP?=		${DESTDIR}${LIBDIR}/libmp.a
 LIBMYTINFO?=	${DESTDIR}${LIBDIR}/libmytinfo.a
+LIBNCP?=	${DESTDIR}${LIBDIR}/libncp.a
 LIBNCURSES?=	${DESTDIR}${LIBDIR}/libncurses.a
 LIBNETGRAPH?=	${DESTDIR}${LIBDIR}/libnetgraph.a
 LIBOBJC?=	${DESTDIR}${LIBDIR}/libobjc.a
@@ -56,11 +61,12 @@ LIBPAM?=	${DESTDIR}${LIBDIR}/libpam.a	# XXX doesn't exist
 MINUSLPAM?=	-lpam
 .if defined(NOSHARED) && ${NOSHARED} != "no" && ${NOSHARED} != "NO"
 .ifdef MAKE_KERBEROS4
-LIBPAM+=	${LIBKRB} ${LIBDES}
-MINUSLPAM+=	-lkrb -ldes
+LIBPAM+=	${LIBKRB} ${LIBCRYPTO} ${LIBCOM_ERR}
+MINUSLPAM+=	-lkrb -lcrypto -lcom_err
 .endif
-LIBPAM+=	${LIBRADIUS} ${LIBTACPLUS} ${LIBSKEY} ${LIBCRYPT} ${LIBMD}
-MINUSLPAM+=	-lradius -ltacplus -lskey -lcrypt -lmd
+LIBPAM+=	${LIBRADIUS} ${LIBTACPLUS} ${LIBSKEY} ${LIBCRYPT} ${LIBMD} \
+		${LIBUTIL}
+MINUSLPAM+=	-lradius -ltacplus -lskey -lcrypt -lmd -lutil
 .endif
 
 LIBPC?=		${DESTDIR}${LIBDIR}/libpc.a	# XXX doesn't exist
@@ -76,6 +82,7 @@ LIBDESCRYPT?=	"don't use LIBDESCRYPT, use LIBCRYPT"
 LIBSCSI?=	${DESTDIR}${LIBDIR}/libscsi.a
 LIBSKEY?=	${DESTDIR}${LIBDIR}/libskey.a
 LIBSS?=		${DESTDIR}${LIBDIR}/libss.a
+LIBSSL?=	${DESTDIR}${LIBDIR}/libssl.a	# XXX in secure dist, not base
 LIBSTDCPLUSPLUS?= ${DESTDIR}${LIBDIR}/libstdc++.a
 LIBTACPLUS?=	${DESTDIR}${LIBDIR}/libtacplus.a
 LIBTCL?=	${DESTDIR}${LIBDIR}/libtcl.a

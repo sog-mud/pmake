@@ -1,5 +1,5 @@
 #	from: @(#)sys.mk	8.2 (Berkeley) 3/21/94
-# $FreeBSD: src/share/mk/sys.mk,v 1.43.2.1 1999/08/29 16:47:48 peter Exp $
+# $FreeBSD: src/share/mk/sys.mk,v 1.45.2.2 2001/03/04 09:40:33 kris Exp $
 
 unix		?=	We run FreeBSD, not UNIX.
 
@@ -36,7 +36,7 @@ AFLAGS		?=
 .if defined(%POSIX)
 CC		?=	c89
 .else
-CC		?=	gcc
+CC		?=	cc
 .endif
 CFLAGS		?=	-O -pipe
 
@@ -66,12 +66,9 @@ FFLAGS		?=	-O
 .endif
 EFLAGS		?=
 
-.if exists(/usr/local/bin/install.sh)
-INSTALL		?=	/usr/local/bin/install.sh
-.else
-INSTALL		?=  /usr/bin/install
-.endif
-LEX		?=	flex
+INSTALL		?=	install
+
+LEX		?=	lex
 LFLAGS		?=
 
 LD		?=	ld
@@ -80,7 +77,7 @@ LDFLAGS		?=
 LINT		?=	lint
 LINTFLAGS	?=	-chapbx
 
-MAKE		?=	pmake
+MAKE		?=	make
 
 OBJC		?=	cc
 OBJCFLAGS	?=	${OBJCINCLUDES} ${CFLAGS} -Wno-import
@@ -100,7 +97,7 @@ YFLAGS		?=
 YFLAGS		?=	-d
 .endif
 
-# FreeBSD/i386 as traditionally been built with a version of make
+# FreeBSD/i386 has traditionally been built with a version of make
 # which knows MACHINE, but not MACHINE_ARCH. When building on other
 # architectures, assume that the version of make being used has an
 # explicit MACHINE_ARCH setting and treat a missing MACHINE_ARCH
@@ -239,12 +236,19 @@ HTAGSFLAGS=
 
 .endif
 
-.if exists(/usr/local/etc/make.conf)
-.include </usr/local/etc/make.conf>
+.if exists(/etc/defaults/make.conf)
+.include </etc/defaults/make.conf>
 .endif
 
-.if exists(/usr/local/etc/make.conf.local)
-.include </usr/local/etc/make.conf.local>
+.if exists(/etc/make.conf)
+.include </etc/make.conf>
+.endif
+
+.include <bsd.cpu.mk>
+
+.if exists(/etc/make.conf.local)
+.error Error, original /etc/make.conf should be moved to the /etc/defaults/ directory and /etc/make.conf.local should be renamed to /etc/make.conf.
+.include </etc/make.conf.local>
 .endif
 
 

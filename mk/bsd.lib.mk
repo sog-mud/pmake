@@ -1,5 +1,5 @@
 #	from: @(#)bsd.lib.mk	5.26 (Berkeley) 5/2/91
-# $FreeBSD: src/share/mk/bsd.lib.mk,v 1.84.2.2 1999/08/29 16:47:43 peter Exp $
+# $FreeBSD: src/share/mk/bsd.lib.mk,v 1.91.2.1 2001/04/25 09:08:36 ru Exp $
 #
 
 .if !target(__initialized__)
@@ -173,7 +173,11 @@ _LIBS+=lib${LIB}_pic.a
 PICFLAG=-fpic
 .endif
 
+.if !defined(NOMAN)
 all: objwarn ${_LIBS} all-man _SUBDIR # llib-l${LIB}.ln
+.else
+all: objwarn ${_LIBS} _SUBDIR # llib-l${LIB}.ln
+.endif
 
 OBJS+=	${SRCS:N*.h:R:S/$/.o/g}
 
@@ -259,33 +263,52 @@ _EXTRADEPEND:
 
 .if !target(install)
 .if !target(beforeinstall)
-beforeinstall:
+beforeinstall: _includeinstall
 .endif
 
-.if defined(PRECIOUSLIB)
+_includeinstall:
+.if defined(INCS)
+.for header in ${INCS}
+	cd ${.CURDIR} && \
+	${INSTALL} -C -o ${INCOWN} -g ${INCGRP} -m ${INCMODE} \
+		${header} ${DESTDIR}${INCDIR}
+
+.endfor
+.endif
+
+.if defined(PRECIOUSLIB) && !defined(NOFSCHG)
 SHLINSTALLFLAGS+= -fschg
 .endif
+
+_INSTALLFLAGS:=	${INSTALLFLAGS}
+.for ie in ${INSTALLFLAGS_EDIT}
+_INSTALLFLAGS:=	${_INSTALLFLAGS${ie}}
+.endfor
+_SHLINSTALLFLAGS:=	${SHLINSTALLFLAGS}
+.for ie in ${INSTALLFLAGS_EDIT}
+_SHLINSTALLFLAGS:=	${_SHLINSTALLFLAGS${ie}}
+.endfor
 
 realinstall: beforeinstall
 .if !defined(INTERNALLIB)
 	${INSTALL} ${COPY} -o ${LIBOWN} -g ${LIBGRP} -m ${LIBMODE} \
-	    ${INSTALLFLAGS} lib${LIB}.a ${DESTDIR}${LIBDIR}
+	    ${_INSTALLFLAGS} lib${LIB}.a ${DESTDIR}${LIBDIR}
 .if !defined(NOPROFILE)
 	${INSTALL} ${COPY} -o ${LIBOWN} -g ${LIBGRP} -m ${LIBMODE} \
-	    ${INSTALLFLAGS} lib${LIB}_p.a ${DESTDIR}${LIBDIR}
+	    ${_INSTALLFLAGS} lib${LIB}_p.a ${DESTDIR}${LIBDIR}
 .endif
 .endif
 .if defined(SHLIB_NAME)
-	${INSTALL} ${COPY} -o ${LIBOWN} -g ${LIBGRP} -m ${LIBMODE} \
-	    ${INSTALLFLAGS} ${SHLINSTALLFLAGS} \
+	${INSTALL} ${COPY} ${STRIP} -o ${LIBOWN} -g ${LIBGRP} -m ${LIBMODE} \
+	    ${_INSTALLFLAGS} ${_SHLINSTALLFLAGS} \
 	    ${SHLIB_NAME} ${DESTDIR}${SHLIBDIR}
 .if defined(SHLIB_LINK)
-	ln ${LN_FLAGS} -sf ${SHLIB_NAME} ${DESTDIR}${SHLIBDIR}/${SHLIB_LINK}
+	ln -sf ${SHLIB_NAME} ${DESTDIR}${SHLIBDIR}/${SHLIB_LINK}
 .endif
 .endif
 .if defined(INSTALL_PIC_ARCHIVE)
 	${INSTALL} ${COPY} -o ${LIBOWN} -g ${LIBGRP} -m ${LIBMODE} \
-	    ${INSTALLFLAGS} lib${LIB}_pic.a ${DESTDIR}${LIBDIR}
+	    ${_INSTALLFLAGS} lib${LIB}_pic.a ${DESTDIR}${LIBDIR}
 .endif
 .if defined(LINKS) && !empty(LINKS)
 	@set ${LINKS}; \
@@ -295,8 +318,18 @@ realinstall: beforeinstall
 		t=${DESTDIR}$$1; \
 		shift; \
 		${ECHO} $$t -\> $$l; \
-		rm -f $$t; \
-		ln ${LN_FLAGS} $$l $$t; \
+		ln -f $$l $$t; \
+	done; true
+.endif
+.if defined(SYMLINKS) && !empty(SYMLINKS)
+	@set ${SYMLINKS}; \
+	while test $$# -ge 2; do \
+		l=$$1; \
+		shift; \
+		t=${DESTDIR}$$1; \
+		shift; \
+		${ECHO} $$t -\> $$l; \
+		ln -fs $$l $$t; \
 	done; true
 .endif
 
@@ -326,9 +359,13 @@ lint:
 
 .if !defined(NOMAN)
 .include <bsd.man.mk>
-.elif !target(maninstall)
-maninstall:
+.else
+.if !target(all-man)
 all-man:
+.endif
+.if !target(maninstall)
+maninstall:
+.endif
 .endif
 
 .include <bsd.dep.mk>
