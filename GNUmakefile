@@ -1,8 +1,8 @@
 #
 # Makefile for gmake
-CC=	gcc31
+CC=	gcc
 CFLAGS=	-I. -O2
-LD=	gcc31
+LD=	gcc
 MKDIR=	mkdir
 GZIP=	gzip
 INSTALL=install -o root -g bin
